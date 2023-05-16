@@ -5,13 +5,11 @@ pub type Position = (f32, f32);
 type NodeID = usize;
 
 
-#[derive(Clone, Copy, Debug)]
 pub struct Body {
     mass: f64,
     position: Position,
 }
 
-#[derive(Clone, Debug)]
 pub struct Rect {
     x: f32,
     y: f32,
@@ -103,7 +101,6 @@ impl QuadTree {
     }
 }
 
-#[derive(Clone, Debug)]
 pub struct Node {
     element: Option<NodeID>,
     rect: Rect,
