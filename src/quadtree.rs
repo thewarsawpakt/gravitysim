@@ -2,6 +2,8 @@ const N_BODIES: usize = 100;
 const MAX_DEPTH: usize = 8;
 
 pub type Position = (f32, f32);
+type NodeID = usize;
+
 
 #[derive(Clone, Copy, Debug)]
 pub struct Body {
@@ -58,7 +60,7 @@ impl Rect {
                 self.h / 2.,
             ),
             Rect::new(
-                // obttom right
+                // bottom right
                 self.x + self.w / 2.,
                 self.y + self.h / 2.,
                 self.w / 2.,
@@ -68,35 +70,52 @@ impl Rect {
     }
 }
 
+
+struct QuadTree {
+    root: Node,
+    elements: Vec<Body>
+}
+
+impl QuadTree {
+    fn new(bounds: Rect) -> Self {
+        QuadTree { root: Node::new(Some(1), bounds), elements: Vec::with_capacity(N_BODIES)}
+    }
+
+    fn insert(&mut self, element: Body) {
+        self.elements.push(element);
+        let id: NodeID = self.elements.len();
+        let mut current = &mut self.root;
+        loop {
+            if current.element.is_none() {
+                current.element = Some(id);
+                return;
+            }
+            for (dir, rect) in current.rect.split().into_iter().enumerate() {
+                if rect.contains(self.elements[id].position) {
+                    if current.neighbors[dir].is_none() {
+                        current.neighbors[dir] = Some(Box::new(Node::new(Some(id), rect)));
+                    } else {
+                        let current = current.neighbors[dir].as_mut().unwrap().as_mut();
+                    }
+                }
+            }
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Node {
-    element: Option<Body>,
+    element: Option<NodeID>,
     rect: Rect,
-    neighbors: [Option<Box<Node>>; 4],
+    neighbors: Vec<Option<Box<Node>>>,
 }
 
 impl Node {
-    fn new(element: Option<Body>, rect: Rect) -> Self {
+    fn new(element: Option<NodeID>, rect: Rect) -> Self {
         Node {
             element,
             rect,
-            neighbors: [None, None, None, None],
-        }
-    }
-
-    fn insert(current: &mut Node, body: Body) {
-        if current.element.is_none() {
-            current.element = Some(body);
-            return;
-        }
-        for (dir, rect) in current.rect.split().into_iter().enumerate() {
-            if rect.contains(body.position) {
-                if current.neighbors[dir].is_none() {
-                    current.neighbors[dir] = Some(Box::new(Node::new(Some(body), rect)));
-                } else {
-                    return Node::insert(current.neighbors[dir].as_mut().unwrap(), body);
-                }
-            }
+            neighbors: vec![None, None, None, None],
         }
     }
 }

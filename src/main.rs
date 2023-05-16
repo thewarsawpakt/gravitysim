@@ -1,5 +1,5 @@
 mod quadtree;
 
 fn main() {
-    
+
 }
